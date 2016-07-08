@@ -169,15 +169,17 @@ class Module(BaseModule):
         def _impl(name, arr, cache):
             """Internal helper for parameter initialization"""
             if cache is not None:
-                if cache.has_key(name):
+                if name in cache:
                     cache_arr = cache[name]
 
                     # just in case the cached array is just the target itself
                     if cache_arr is not arr:
                         cache_arr.copyto(arr)
                 else:
-                    assert allow_missing
-                    initializer(name, arr)
+                    if not allow_missing:
+                        raise RuntimeError("%s is not presented" % name)
+                    if initializer != None:
+                        initializer(name, arr)
             else:
                 initializer(name, arr)
 
@@ -254,7 +256,6 @@ class Module(BaseModule):
                                                      label_shapes, self._param_names,
                                                      for_training, inputs_need_grad,
                                                      shared_group, logger=self.logger)
-
         if shared_module is not None:
             self.params_initialized = True
             self._arg_params = shared_module._arg_params
@@ -299,9 +300,12 @@ class Module(BaseModule):
             if kvstore and kvstore.type == 'dist_sync':
                 batch_size *= kvstore.num_workers
             idx2name = {}
-            for k in range(len(self._context)):
-                idx2name.update({i*len(self._context)+k: n
-                                 for i, n in enumerate(self._exec_group.param_names)})
+            if update_on_kvstore:
+                idx2name.update(enumerate(self._exec_group.param_names))
+            else:
+                for k in range(len(self._context)):
+                    idx2name.update({i*len(self._context)+k: n
+                                     for i, n in enumerate(self._exec_group.param_names)})
             optimizer_params = dict(optimizer_params)
             if 'rescale_grad' not in optimizer_params:
                 optimizer_params['rescale_grad'] = 1.0/batch_size
@@ -446,3 +450,8 @@ class Module(BaseModule):
         latest parameters from `self._arg_params` and `self._aux_params`.
         """
         self._exec_group.get_params(self._arg_params, self._aux_params)
+
+    def install_monitor(self, mon):
+        """ Install monitor on all executors """
+        assert self.binded
+        self._exec_group.install_monitor(mon)

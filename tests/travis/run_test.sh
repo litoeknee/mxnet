@@ -67,9 +67,7 @@ if [ ${TASK} == "r_test" ]; then
     cd R-package
     Rscript -e "library(devtools); library(methods); options(repos=c(CRAN='https://cran.rstudio.com')); install_deps(dependencies = TRUE)"
     cd ..
-    wget https://cran.rstudio.com/src/contrib/Archive/imager/imager_0.13.tar.gz
 
-    R CMD INSTALL imager_0.13.tar.gz
     make rpkg
     R CMD check --no-examples --no-manual --no-vignettes --no-build-vignettes mxnet_*.tar.gz
     R CMD INSTALL mxnet_*.tar.gz
@@ -81,7 +79,11 @@ if [ ${TASK} == "r_test" ]; then
     wget https://s3-us-west-2.amazonaws.com/mxnet/train.csv -O train.csv
     wget https://s3-us-west-2.amazonaws.com/mxnet/test.csv -O test.csv
 
-    cat *.R > r_test.R
+    cat CallbackFunctionTutorial.R \
+    fiveMinutesNeuralNetwork.R \
+    mnistCompetition.R \
+    classifyRealImageWithPretrainedModel.R \
+    ndarrayAndSymbolTutorial.R > r_test.R
 
     Rscript r_test.R || exit -1
 
