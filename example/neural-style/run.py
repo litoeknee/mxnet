@@ -218,7 +218,7 @@ for e in range(args.max_num_epochs):
         logging.info('eps < args.stop_eps, training finished')
         break
     if (e+1) % args.save_epochs == 0:
-        SaveImage(new_img.asnumpy(), 'output/tmp_'+str(e+1)+'.jpg')
+        SaveImage(new_img.asnumpy(), 'output/tmp_'+str(e+1)+','+str(eps)+'.jpg')
 
 SaveImage(new_img.asnumpy(), args.output)
 
